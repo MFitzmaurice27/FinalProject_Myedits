@@ -1,68 +1,80 @@
-/*
- * mlx90614.h
- *
- *  Created on: Sep 13, 2023
- *      Author: fex95
- */
+/*  Copyright 2023 Krisam Reinhard.
+	All rights reserved.
 
-#ifndef SRC_MLX90614_MLX90614_H_
-#define SRC_MLX90614_MLX90614_H_
+	 Redistribution and use in source and binary forms, with or without modification,
+	are permitted provided that the following conditions are met:
 
-#include "stm32l4xx_hal.h"
+	1. Redistributions of source code must retain the above copyright notice, this
+	list of conditions and the following disclaimer.
 
-#ifdef __cplusplus
-extern "C" {
+	2. Redistributions in binary form must reproduce the above copyright notice,
+	this list of conditions and the following disclaimer in the documentation and/or
+	other materials provided with the distribution.
+
+	3. Neither the name of the copyright holder nor the names of its contributors
+	may be used to endorse or promote products derived from this software without
+	specific prior written permission.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+	DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+	ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+	ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+   Current state of the driver: in development
+   v1.0 -> reading register value (temperature register) by using the STM32 I2C HAL
+        -> The use of this driver is at your own risk. No guarantee for the correctness of the source or the defined values.
+*/
+
+
+
+#ifndef __MLX90614_H
+#define __MLX90614_H
+
+
+
+
+
+#include "stm32f1xx_hal.h"
+
+/* EEPROM register */
+#define eeprom_TOmax			0x00
+#define	eeprom_TOmin			0x01
+#define eeprom_PWMCTRL			0x02
+#define eeprom_TaRange			0x03
+#define eeprom_Emissivity		0x04
+#define eeprom_config_1			0x05
+#define eeprom_SMBusAddress		0x0E
+
+/* RAM register */
+#define ram_TA					0x06
+#define ram_Tobj_1				0x07
+#define ram_Tobj_2				0x08
+
+/* basis commandBytes */
+#define RAM_Access				0x00
+#define EEPROM_Access			0x20
+#define Flag_Access				0xF0
+#define SLEEP_MODE				0xFF
+
+#define addr_MLX90614			(0x5A << 1)
+
+
+/* test function to read two temperature registers */
+uint8_t MLX90614_Test_readTemp(I2C_HandleTypeDef *I2C_Module, uint16_t device_address, float* t_Ambient, float* t_Object);
+
+/* read a register fo the MLX90614 */
+uint8_t MLX90614_readRegister(I2C_HandleTypeDef *I2C_Module, uint16_t device_address, uint16_t reg_address, uint8_t *regValue);
+
+/* this function is not implemented in current state */
+uint8_t MLX90614_writeRegister(I2C_HandleTypeDef I2C_Module, uint16_t device_address, uint16_t reg_address, uint16_t regValue);
+
+
+
 #endif
-
-typedef struct{
-	void* interface;
-	uint8_t address;
-	uint8_t address_internal;
-
-	GPIO_TypeDef * power_gpio;
-	uint16_t power_gpio_pin;
-
-} MLX90614;
-
-enum MLX90614_RAM{
-	MLX90614_RAM_RAW_IR_1 = 0x04,
-	MLX90614_RAM_RAW_IR_2 = 0x05,
-	MLX90614_RAM_T_AMBIENT = 0x06,
-	MLX90614_RAM_T_OBJ_1	= 0x07,
-	MLX90614_RAM_T_OBJ_2	= 0x08
-};
-
-enum MLX90614_EEPROM{
-	MLX90614_EEPROM_TO_MAX = 0x00,
-	MLX90614_EEPROM_TO_MIN = 0x01,
-	MLX90614_EEPROM_PWM_CTRL = 0x02,
-	MLX90614_EEPROM_TA_RANGE = 0x03,
-	MLX90614_EEPROM_EMISSIVITY = 0x04,
-	MLX90614_EEPROM_CONFIG_1 = 0x05,
-	MLX90614_EEPROM_I2C_ADDRESS = 0x0E,
-	MLX90614_EEPROM_ID_1 = 0x1C,
-	MLX90614_EEPROM_ID_2 = 0x1D,
-	MLX90614_EEPROM_ID_3 = 0x1E,
-	MLX90614_EEPROM_ID_4 = 0x1F
-};
-
-enum MLC90614_OBJ{
-	MLX90614_OBJ1,
-	MLX90614_OBJ2
-};
-
-uint8_t MLX90614_init(MLX90614* sensor_obj);
-void MLX90614_restart(MLX90614* sensor_obj);
-
-uint16_t MLX90614_readEEPROM(MLX90614* sensor_obj, uint8_t reg);
-uint8_t MLX90614_writeEEPROM(MLX90614* sensor_obj, uint8_t reg, uint16_t value);
-void MLX90614_readRAM(MLX90614* sensor_obj, uint8_t reg, uint8_t* data);
-void MLX90614_tunitToDegreeC(uint8_t* bytes, float* temperature);
-void MLX90614_readAmbientTemperature(MLX90614* sensor_obj, float* data);
-void MLX90614_readObjTemperature(MLX90614* sensor_obj, float* data, uint8_t obj_nr);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* SRC_MLX90614_MLX90614_H_ */
